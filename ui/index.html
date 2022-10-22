@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDN Server</title>
+  <style>
+    body {
+      font-family:'Times New Roman', Times, serif;
+    }
+  </style>
+  <script type="module">
+    import confetti from 'https://cdn.skypack.dev/canvas-confetti';
+    confetti();
+    import App from './js/application.js'
+    customElements.define('scdn-app', App)
+  </script>
+</head>
+<body>
+  <h1>CDN Server 2</h1>
+  <scdn-app></scdn-app>
+</body>
+</html>

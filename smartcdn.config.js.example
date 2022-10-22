@@ -1,0 +1,7 @@
+export default {
+  importMaps: {
+    router: "/ing-web-es_router/1.8.0/dist-router/interface.js",
+  },
+  port: 3000,
+  packagesFolder: "~/.cdnPackages",
+};
