@@ -53,13 +53,12 @@ dotenv.config();
       };
     }
   );
+  // Import map
+  server.use(server.middlewares.importMaps);
   server.use(server.middlewares.staticWithSourceMap);
   server.static(packagesFolder);
 
   server.static(path.join(process.cwd(), "ui"));
-
-  // Import map
-  server.use(server.middlewares.importMaps);
 
   server.route("/importMaps", server.middlewares.serveImportMaps);
   server.route(
