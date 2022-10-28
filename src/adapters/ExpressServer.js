@@ -18,11 +18,11 @@ export class ExpressServer {
    * Create a new ExpressServer instance with the adapters
    * @param {import('../../types/Server').ServerOptions} adapters
    */
-  constructor({ database, packagesFolder, uplink, importMaps = {} }) {
+  constructor({ database, packagesFolder, uplink, redirections = {} }) {
     this._packagesFolder = packagesFolder;
     this._uplink = uplink;
     this._database = database;
-    this._importMaps = importMaps;
+    this._redirections = redirections;
 
     this._app = express();
     this._app.use(cors());
@@ -45,7 +45,7 @@ export class ExpressServer {
     });
 
     this._app.listen(port, () =>
-      console.log(`Server listening on http://${host}:${port}`)
+      console.log(`SCDN Server listening at http://${host}:${port}`)
     );
   }
 
@@ -89,8 +89,8 @@ export class ExpressServer {
         createUploadPackageMiddleware(this._packagesFolder),
       ],
       staticWithSourceMap: staticWithSourceMap.bind(this),
-      importMaps: importMaps.bind(this),
-      serveImportMaps: serveImportMaps.bind(this),
+      serveRedirections: serveRedirections.bind(this),
+      redirections: redirections.bind(this),
     };
   }
 }
@@ -152,8 +152,8 @@ async function staticWithSourceMap(req, res, next) {
   }
 }
 
-async function importMaps(req, res, next) {
-  const redirection = this._importMaps[req.path.slice(1)];
+async function serveRedirections(req, res, next) {
+  const redirection = this._redirections[req.path.slice(1)];
   if (redirection) {
     console.log(
       `[info]: Redirecting based on import map from ${req.path} to ${redirection} .`
@@ -164,13 +164,13 @@ async function importMaps(req, res, next) {
   }
 }
 
-function serveImportMaps(req, res) {
+function redirections(req, res) {
   const hostAndPort = `http://${this._host}:${this._port}`;
-  const importMaps = Object.keys(this._importMaps).reduce((result, key) => {
-    result[key] = [hostAndPort, this._importMaps[key]].join("");
+  const redirections = Object.keys(this._redirections).reduce((result, key) => {
+    result[key] = [hostAndPort, this._redirections[key]].join("");
     return result;
   }, {});
-  return importMaps;
+  return redirections;
 }
 
 /**

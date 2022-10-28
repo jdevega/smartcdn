@@ -1,5 +1,5 @@
 export default {
-  importMaps: {
+  redirections: {
     router: "/ing-web-es_router/1.8.0/dist-router/interface.js",
   },
   port: 3000,

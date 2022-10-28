@@ -26,7 +26,7 @@ Coming soon:
 Install it globally using yarn or npm
 
 ```js
-npm install -g smartcdn
+npm install -g scdn
 ```
 
 ## Configuration
@@ -35,20 +35,20 @@ The server can be configured using ENV variables and/or using a config file. ENV
 
 ENV variables you can set are: `port`, `packagesFolder` and `uplink`.
 
-The config file should be placed in the folder where the server is being started with `smartcdn.config.js` name. You can set dynamic configuration in this file for different running environments.
+The config file should be placed in the folder where the server is being started with `scdn.config.js` name. You can set dynamic configuration in this file for different running environments.
 
 ```js
 const config = {
   port: 3000,
   packagesFolder: "~/.cdnPackages",
-  importMaps: {
+  redirections: {
     "test@latest": "/test/2.0.0/entryPoint.js",
   },
 };
 
 if (process.env.NODE_ENV === "production") {
   config.port = 4000;
-  config.importMaps["test@latest"] = "/test/1.0.0/entryPoint.js";
+  config.redirections["test@latest"] = "/test/1.0.0/entryPoint.js";
 }
 
 export default config;

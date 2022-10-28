@@ -18,5 +18,5 @@ export type ServerOptions = {
   database: DatabaseAdapter;
   packagesFolder: string;
   uplink?: string;
-  importMaps?: object;
+  redirections?: object;
 };
