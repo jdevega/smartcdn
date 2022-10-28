@@ -1,5 +1,11 @@
 # scdn
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3](https://github.com/jdevega/smartcdn/pull/3) [`25857ba`](https://github.com/jdevega/smartcdn/commit/25857ba83619c46871bdda1cece47c6378038f39) Thanks [@jdevega](https://github.com/jdevega)! - change naming for importMaps and config file
+
 ## 0.1.0
 
 ### Minor Changes
