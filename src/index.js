@@ -14,7 +14,7 @@ dotenv.config();
   // Load variables from config file into process.env
   try {
     const configFilePath =
-      process.env.config || path.join(process.cwd(), "smartcdn.config.js");
+      process.env.config || path.join(process.cwd(), "scdn.config.js");
     const config = await import(configFilePath);
     process.env = { ...config.default, ...process.env };
   } catch (error) {}
@@ -32,7 +32,7 @@ dotenv.config();
     database,
     packagesFolder,
     // @ts-ignore
-    importMaps: process.env.importMaps,
+    redirections: process.env.redirections,
   });
 
   const application = createApplication({
@@ -54,13 +54,13 @@ dotenv.config();
     }
   );
   // Import map
-  server.use(server.middlewares.importMaps);
+  server.use(server.middlewares.serveRedirections);
   server.use(server.middlewares.staticWithSourceMap);
   server.static(packagesFolder);
 
   server.static(path.join(process.cwd(), "ui"));
 
-  server.route("/importMaps", server.middlewares.serveImportMaps);
+  server.route("/redirections", server.middlewares.redirections);
   server.route(
     "/api/packages",
     async () => await application.getLastPublishedPackages(10)
