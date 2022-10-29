@@ -31,6 +31,7 @@ const ONE_CDN_FOLDER = ".scdn";
     const config = parseFolder(
       args.config || process.env.config || "scdn.config.js"
     );
+    const watch = args.watch || process.env.watch;
 
     return {
       host,
@@ -40,6 +41,7 @@ const ONE_CDN_FOLDER = ".scdn";
       readmePath,
       packagePath,
       config,
+      watch,
     };
   }
 
@@ -50,15 +52,8 @@ const ONE_CDN_FOLDER = ".scdn";
   }
 
   /** @type {import("../types/Options").CommandLineOptions} */
-  const {
-    host,
-    port,
-    packagesFolder,
-    sourceFolder,
-    readmePath,
-    packagePath,
-    config,
-  } = parseOptions();
+  const { host, port, sourceFolder, readmePath, packagePath, config } =
+    parseOptions();
 
   const argv = yargs(hideBin(process.argv))
     .usage("$0 <command> [options]")
@@ -127,6 +122,12 @@ const ONE_CDN_FOLDER = ".scdn";
           description: "Path to the package.json to include",
           default: packagePath,
         },
+        watch: {
+          alias: "w",
+          type: "boolean",
+          description:
+            "Publish the package when changes are made to the files in the folder with the content",
+        },
       },
       publishPackage
     )
@@ -162,42 +163,81 @@ const ONE_CDN_FOLDER = ".scdn";
   }
 
   async function publishPackage(args) {
-    const { host, port, packagePath, readmePath, sourceFolder } =
+    const { host, port, packagePath, readmePath, sourceFolder, watch } =
       parseOptions(args);
 
-    try {
-      if (!fileExists(packagePath))
-        throw Error(`[Error] package.json file not found at ${packagePath}.`);
+    async function publish() {
+      try {
+        if (!fileExists(path.join(process.cwd(), sourceFolder)))
+          throw Error(`## [Error] Source folder not found ${sourceFolder} .`);
+        if (!fileExists(packagePath))
+          throw Error(
+            `## [Error] package.json file not found at ${packagePath} .`
+          );
 
-      const { name, version } = JSON.parse(
-        fs.readFileSync(path.join(process.cwd(), packagePath)).toString()
-      );
+        const { name, version } = JSON.parse(
+          fs.readFileSync(path.join(process.cwd(), packagePath)).toString()
+        );
 
-      const readmeFileExists = fileExists(readmePath);
-      if (!readmeFileExists)
-        console.warn(`[Warn] README.md file not found at ${readmePath}.`);
+        const readmeFileExists = fileExists(readmePath);
+        if (!readmeFileExists)
+          console.warn(`## [Warn] README.md file not found at ${readmePath}.`);
 
-      const artifactPath = createArtifact({
-        name,
-        version,
-        sourceFolder,
-        packagePath,
-        readmePath: readmeFileExists && readmePath,
-      });
+        const artifactPath = createArtifact({
+          name,
+          version,
+          sourceFolder,
+          packagePath,
+          readmePath: readmeFileExists && readmePath,
+        });
 
-      const form = createForm({ name, version, file: artifactPath });
-      // @ts-ignore
-      const response = await fetch(`http://${host}:${port}/api/packages`, {
-        method: "POST",
-        body: form,
-        headers: form.getHeaders(),
-      });
+        const form = createForm({ name, version, file: artifactPath });
+        // @ts-ignore
+        const response = await fetch(`http://${host}:${port}/api/packages`, {
+          method: "POST",
+          body: form,
+          headers: form.getHeaders(),
+        });
 
-      const { message } = await response.json();
+        const { message } = await response.json();
 
-      console.log(message);
-    } catch (error) {
-      console.error(error);
+        console.log(message);
+      } catch (error) {}
+    }
+
+    function debounce(func, timeout = 300) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          try {
+            func.apply(this, args);
+          } catch (error) {
+            clearTimeout(timer);
+          }
+        }, timeout);
+      };
+    }
+
+    if (watch) {
+      const watchedPath = path.join(process.cwd(), sourceFolder);
+      const publishDebounced = debounce(publish, 1000);
+      try {
+        fs.watch(watchedPath, {}, (event, filename) => {
+          if (packagePath.includes(filename) || readmePath.includes(filename))
+            return;
+          try {
+            fs.readdir(watchedPath, (err, files) => {
+              if (!err && files.length) publishDebounced(watchedPath);
+            });
+          } catch (error) {}
+        });
+        console.log("## Watching", watchedPath, "to be published on changes.");
+      } catch (error) {
+        console.log("## [error] Path not found", watchedPath);
+      }
+    } else {
+      publish();
     }
   }
 
