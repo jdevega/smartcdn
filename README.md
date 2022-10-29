@@ -11,15 +11,15 @@ This was a personal project that I found useful and I wanted to share it. It bas
 - **SourceMap**: Add a source map header and reference at the end of each file to serve source map files to the browser.
 - **Uplink server**: Fallback server to request files not found in the local one.
 - **ImportMap**: Include redirections for paths.
+- **Cache**: Add long term cache
+- **Config file path**: Point to a config file out of the directory where the server has been started.
 
 Coming soon:
 
-- **Config file path**: Point to a config file out of the directory where the server has been started.
 - **Watch mode**: Auto publish a package every time a file is updated in the folder where the bundled code is dropped.
 - **Web UI**: A web interface to search and inspect published packages and server configuration.
 - **Secure Mode**: The server rejects to override a version already published.
 - **Popular CDNs as uplinks**: Configure the server to use CDNs such as Skypack as uplink using a single option ( --uplink-skypack ).
-- **Cache**: Add long term cache
 
 ## Getting started
 
@@ -39,6 +39,7 @@ The config file should be placed in the folder where the server is being started
 
 ```js
 const config = {
+  host: "my.cdn.com",
   port: 3000,
   packagesFolder: "~/.cdnPackages",
   redirections: {
@@ -62,6 +63,7 @@ The package includes the `scdn` command.
 
 Starts the server with the default configuration. This command has these options:
 
+- -s, --host: The host name to be used in urls pointing to the server. [default: localhost]
 - -p, --port: The port the server will be listening to. [default: 3000]
 - -f, --packagesFolder: The path to the folder where the packages are/will be stored. [default: <USER_HOME>/.scdn]
 - -u, --uplink: The first URL section of the server to be used as fallback. For example: https://uplink.cdn.com . [default: none]
@@ -72,9 +74,9 @@ Examples:
 ```bash
 > scdn start
 
-> scdn start -p 3001 -f /packages -u https://uplink.cdn.com
+> scdn start -n my.cdn.com -p 3001 -f /packages -u https://uplink.cdn.com
 
-> scdn start --port 3001 --packagesFolder /packages --uplink https://uplink.cdn.com
+> scdn start --host my.cdn.com --port 3001 --packagesFolder /packages --uplink https://uplink.cdn.com
 ```
 
 > scdn publish
