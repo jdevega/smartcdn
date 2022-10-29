@@ -6,4 +6,5 @@ export type CommandLineOptions = {
   readmePath: string;
   packagePath: string;
   uplink?: string;
+  config?: string;
 };

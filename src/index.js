@@ -12,10 +12,14 @@ dotenv.config();
 
 (async () => {
   // Load variables from config file into process.env
+  console.log(process.env);
   try {
     const configFilePath =
       process.env.config || path.join(process.cwd(), "scdn.config.js");
     const config = await import(configFilePath);
+
+    console.log("## Using config file", configFilePath);
+
     process.env = { ...config.default, ...process.env };
   } catch (error) {}
 
@@ -25,6 +29,11 @@ dotenv.config();
     uplink: uplinkHost,
     host = "localhost",
   } = process.env;
+
+  console.log("## Host name:", host);
+  console.log("## Port:", port);
+  console.log("## Packages folder:", packagesFolder);
+  if (uplinkHost) console.log("## Uplink:", uplinkHost);
 
   const database = new MemoryDatabase();
   const uplink = uplinkHost && new GenericUplink(uplinkHost);

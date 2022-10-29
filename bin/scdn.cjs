@@ -28,6 +28,9 @@ const ONE_CDN_FOLDER = ".scdn";
       args.readmePath || process.env.readmePath || "./README.md";
     const packagePath =
       args.packgePath || process.env.packagePath || "./package.json";
+    const config = parseFolder(
+      args.config || process.env.config || "scdn.config.js"
+    );
 
     return {
       host,
@@ -36,6 +39,7 @@ const ONE_CDN_FOLDER = ".scdn";
       sourceFolder,
       readmePath,
       packagePath,
+      config,
     };
   }
 
@@ -46,8 +50,15 @@ const ONE_CDN_FOLDER = ".scdn";
   }
 
   /** @type {import("../types/Options").CommandLineOptions} */
-  const { host, port, packagesFolder, sourceFolder, readmePath, packagePath } =
-    parseOptions();
+  const {
+    host,
+    port,
+    packagesFolder,
+    sourceFolder,
+    readmePath,
+    packagePath,
+    config,
+  } = parseOptions();
 
   const argv = yargs(hideBin(process.argv))
     .usage("$0 <command> [options]")
@@ -55,21 +66,29 @@ const ONE_CDN_FOLDER = ".scdn";
       "start",
       "Start the CDN server.",
       {
+        host: {
+          alias: "s",
+          description: "Host name where the server is hosted",
+          default: host,
+        },
         port: {
           alias: "p",
           description: "Port number where the host will be listening.",
-          default: port,
         },
         packagesFolder: {
           alias: "f",
           description:
             "Absolute path to the folder that will be used to store the files.",
-          default: packagesFolder,
         },
         uplink: {
           alias: "u",
           description:
             "The host name to be used as fallback to request files from.",
+        },
+        config: {
+          alias: "c",
+          description: "Path of the config file",
+          default: config,
         },
       },
       start
@@ -81,13 +100,13 @@ const ONE_CDN_FOLDER = ".scdn";
         host: {
           alias: "s",
           type: "string",
-          description: "host hostname or IP",
+          description: "Server's hostname or IP",
           default: host,
         },
         port: {
           alias: "p",
           type: "number",
-          description: "Port number where the host is listening",
+          description: "Port number where the server is listening at",
           default: port,
         },
         folder: {
@@ -114,13 +133,14 @@ const ONE_CDN_FOLDER = ".scdn";
     .help("h").argv;
 
   function start(args) {
-    const { port, packagesFolder, uplink } = args;
+    const { port, packagesFolder, uplink, config } = args;
     const child = spawn("node", [path.join(__dirname, "..", "src/index.js")], {
       env: {
         PATH: process.env.PATH,
         port,
         packagesFolder,
         uplink,
+        config,
       },
     });
 
