@@ -13,10 +13,10 @@ This was a personal project that I found useful and I wanted to share it. It bas
 - **ImportMap**: Include redirections for paths.
 - **Cache**: Add long term cache
 - **Config file path**: Point to a config file out of the directory where the server has been started.
+- **Watch mode**: Auto publish a package every time a file is updated in the folder where the bundled code is dropped.
 
 Coming soon:
 
-- **Watch mode**: Auto publish a package every time a file is updated in the folder where the bundled code is dropped.
 - **Web UI**: A web interface to search and inspect published packages and server configuration.
 - **Secure Mode**: The server rejects to override a version already published.
 - **Popular CDNs as uplinks**: Configure the server to use CDNs such as Skypack as uplink using a single option ( --uplink-skypack ).
@@ -88,6 +88,7 @@ Publish a package to the server. The dist folder, package.json and README.md fil
 - -f, --folder: path to the folder where the the content to publish is placed. [default: ./dist]
 - -r, --readme: Path to the README.md to include [default: ./REAME.md]
 - -i, --package: Path to re package.json to include. [default: ./package.json]
+- -w, --watch: Watch the folder to publish the content when it changes.
 - -h: Print this help.
 
 Examples:
@@ -96,6 +97,8 @@ Examples:
 > scdn publish
 
 > scdn -s 192.168.0.1 -p 3001 -f /packages/todo/bundle -r /packages/todo/README.md -i /pacakges/todo/package.json
+
+> scdn publish -w
 ```
 
 ## SemVer Routes
