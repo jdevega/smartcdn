@@ -37,4 +37,8 @@ export class MemoryDatabase {
   values() {
     return Promise.resolve(Object.values(this._data));
   }
+
+  async exist(key) {
+    return Promise.resolve((await this.keys()).includes(key));
+  }
 }

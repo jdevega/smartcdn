@@ -32,6 +32,7 @@ const ONE_CDN_FOLDER = ".scdn";
       args.config || process.env.config || "scdn.config.js"
     );
     const watch = args.watch || process.env.watch;
+    const secure = args.secure || process.env.secure;
 
     return {
       host,
@@ -42,6 +43,7 @@ const ONE_CDN_FOLDER = ".scdn";
       packagePath,
       config,
       watch,
+      secure,
     };
   }
 
@@ -52,7 +54,7 @@ const ONE_CDN_FOLDER = ".scdn";
   }
 
   /** @type {import("../types/Options").CommandLineOptions} */
-  const { host, port, sourceFolder, readmePath, packagePath, config } =
+  const { host, port, sourceFolder, readmePath, packagePath, config, secure } =
     parseOptions();
 
   const argv = yargs(hideBin(process.argv))
@@ -62,7 +64,7 @@ const ONE_CDN_FOLDER = ".scdn";
       "Start the CDN server.",
       {
         host: {
-          alias: "s",
+          alias: "n",
           description: "Host name where the server is hosted",
           default: host,
         },
@@ -85,6 +87,10 @@ const ONE_CDN_FOLDER = ".scdn";
           description: "Path of the config file",
           default: config,
         },
+        secure: {
+          alias: "s",
+          description: "Run server in secure mode.",
+        },
       },
       start
     )
@@ -93,7 +99,7 @@ const ONE_CDN_FOLDER = ".scdn";
       "Publish a package to the CDN host.",
       {
         host: {
-          alias: "s",
+          alias: "n",
           type: "string",
           description: "Server's hostname or IP",
           default: host,
@@ -134,7 +140,7 @@ const ONE_CDN_FOLDER = ".scdn";
     .help("h").argv;
 
   function start(args) {
-    const { port, packagesFolder, uplink, config } = args;
+    const { port, packagesFolder, uplink, config, secure } = args;
     const child = spawn("node", [path.join(__dirname, "..", "src/index.js")], {
       env: {
         PATH: process.env.PATH,
@@ -142,6 +148,7 @@ const ONE_CDN_FOLDER = ".scdn";
         packagesFolder,
         uplink,
         config,
+        secure,
       },
     });
 

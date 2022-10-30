@@ -6,6 +6,7 @@ import { ExpressServer } from "./adapters/ExpressServer.js";
 import { MemoryDatabase } from "./adapters/MemoryDatabase.js";
 import { createApplication } from "./application.js";
 import { GenericUplink } from "./adapters/GenericUplink.js";
+import { PackageName } from "./domain/PackageName.js";
 
 // Load env variables from .env
 dotenv.config();
@@ -28,10 +29,12 @@ dotenv.config();
     packagesFolder = `${os.homedir()}/.scdn`,
     uplink: uplinkHost,
     host = "localhost",
+    secure = false,
   } = process.env;
 
   console.log("## Host name:", host);
   console.log("## Port:", port);
+  console.log("## Secure mode:", secure ? "ON" : "OFF");
   console.log("## Packages folder:", packagesFolder);
   if (uplinkHost) console.log("## Uplink:", uplinkHost);
 
@@ -42,6 +45,7 @@ dotenv.config();
     packagesFolder,
     // @ts-ignore
     redirections: process.env.redirections,
+    secure: Boolean(secure),
   });
 
   const application = createApplication({
@@ -56,24 +60,41 @@ dotenv.config();
     ...server.middlewares.uploadPackage,
     async ({ packageJsonContent }) => {
       const { name, version } = packageJsonContent;
-      application.savePackage(packageJsonContent);
-      return {
-        message: `[info] Package published at http://localhost:${port}/view/${name}/${version}`,
-      };
+      try {
+        await application.savePackage(packageJsonContent);
+        return {
+          message: `[info] Package published at http://localhost:${port}/view/${name}/${version}`,
+        };
+      } catch (error) {
+        return {
+          status: 403,
+          message: error.message,
+        };
+      }
     }
   );
-  // Import map
+  // Redirections
   server.use(server.middlewares.serveRedirections);
-  server.use(server.middlewares.staticWithSourceMap);
+
+  // UI static files
+  const { pathname: uiRoot } = new URL("../ui", import.meta.url);
+  server.static(uiRoot);
+
+  // Packages static files
   server.static(packagesFolder);
 
-  server.static(path.join(process.cwd(), "ui"));
+  // JS source map
+  server.use(server.middlewares.staticWithSourceMap);
 
-  server.route("/redirections", server.middlewares.redirections);
+  // API Redirections endpoint
+  server.route("/api/redirections", server.middlewares.redirections);
+
+  // API Last published packages
   server.route(
     "/api/packages",
     async () => await application.getLastPublishedPackages(10)
   );
+
   server.route("/api/packages/:name", async ({ params: { name } }) => {
     try {
       const pkg = await application.getPackage(name);
@@ -141,10 +162,18 @@ dotenv.config();
 
   server.route(
     ["/@:scope/:name", "/:name"],
+    /**
+     *
+     * @param {object} request
+     * @param {object} request.params
+     * @param {string} request.params.scope
+     * @param {string} request.params.name
+     * @returns
+     */
     async ({ params: { scope, name } }, { redirect }) => {
       try {
-        const packageName = scope ? ["@" + scope, name].join("/") : name;
-        const pkg = await application.getPackage(packageName);
+        const packageName = new PackageName({ scope, name }); // scope ? ["@" + scope, name].join("/") : name;
+        const pkg = await application.getPackage(packageName.name);
 
         redirect(
           `/${application.getUplinkScopedName(scope, name)}/${

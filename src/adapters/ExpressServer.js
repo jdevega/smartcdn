@@ -18,11 +18,12 @@ export class ExpressServer {
    * Create a new ExpressServer instance with the adapters
    * @param {import('../../types/Server').ServerOptions} adapters
    */
-  constructor({ database, packagesFolder, uplink, redirections = {} }) {
+  constructor({ database, packagesFolder, uplink, secure, redirections = {} }) {
     this._packagesFolder = packagesFolder;
     this._uplink = uplink;
     this._database = database;
     this._redirections = redirections;
+    this._secure = Boolean(secure);
 
     this._app = express();
     this._app.use(cors());
@@ -36,12 +37,20 @@ export class ExpressServer {
     return this._packagesFolder;
   }
 
+  get secure() {
+    return this._secure;
+  }
+
   start(host, port) {
     this._host = host;
     this._port = port;
 
     this._app.get("*", (req, res) => {
-      res.sendFile(path.join("ui/index.html"));
+      const { pathname: root } = new URL(
+        "../../ui/index.html",
+        import.meta.url
+      );
+      res.sendFile(root);
     });
 
     this._app.listen(port, () =>

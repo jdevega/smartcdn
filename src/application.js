@@ -38,7 +38,7 @@ export function createApplication({ database, server, uplink }) {
     async getPackageVersion(name, version) {
       const packageInfo = await database.get(databaseKey({ name, version }));
       if (!packageInfo)
-        throw Error(`[error]: No info in database for ${name}@${version} .`);
+        throw Error(`## [Error]: No info in database for ${name}@${version} .`);
       return new Package(packageInfo);
     },
     async getSemverVersion(name, version) {
@@ -51,12 +51,18 @@ export function createApplication({ database, server, uplink }) {
         return _version;
       }
     },
-    savePackage(info) {
+    async savePackage(info) {
+      const key = databaseKey(info);
+      if (server.secure && (await database.exist(key))) {
+        throw Error(
+          "## [Error]: Packages cannot be overwritten in secure mode."
+        );
+      }
       database.set(databaseKey(info), info);
     },
 
     async getFileFromUplink({ name, version, file }) {
-      if (!uplink) throw Error();
+      if (!uplink) throw Error("## [Error]: No uplink provided.");
 
       const packageName = uplink.parseScopedName(name);
       const content = await uplink.get({ name, version, file });

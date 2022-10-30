@@ -18,5 +18,6 @@ export type ServerOptions = {
   database: DatabaseAdapter;
   packagesFolder: string;
   uplink?: string;
+  secure?: boolean;
   redirections?: object;
 };

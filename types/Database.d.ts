@@ -5,4 +5,5 @@ export interface DatabaseAdapter {
   delete(key: string);
   keys(): Promise<string[]>;
   values(): Promise<object[]>;
+  exist(key: string): Promise<boolean>;
 }
