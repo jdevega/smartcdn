@@ -14,11 +14,11 @@ This was a personal project that I found useful and I wanted to share it. It bas
 - **Cache**: Add long term cache
 - **Config file path**: Point to a config file out of the directory where the server has been started.
 - **Watch mode**: Auto publish a package every time a file is updated in the folder where the bundled code is dropped.
+- **Secure Mode**: The server rejects to override a version already published.
 
 Coming soon:
 
 - **Web UI**: A web interface to search and inspect published packages and server configuration.
-- **Secure Mode**: The server rejects to override a version already published.
 - **Popular CDNs as uplinks**: Configure the server to use CDNs such as Skypack as uplink using a single option ( --uplink-skypack ).
 
 ## Getting started
@@ -63,10 +63,11 @@ The package includes the `scdn` command.
 
 Starts the server with the default configuration. This command has these options:
 
-- -s, --host: The host name to be used in urls pointing to the server. [default: localhost]
+- -n, --host: The host name to be used in urls pointing to the server. [default: localhost]
 - -p, --port: The port the server will be listening to. [default: 3000]
 - -f, --packagesFolder: The path to the folder where the packages are/will be stored. [default: <USER_HOME>/.scdn]
 - -u, --uplink: The first URL section of the server to be used as fallback. For example: https://uplink.cdn.com . [default: none]
+- -s, --secure: Run the server in secure mode. In secure mode, publishing the same version of a package is forbiden. [default: false]
 - -h: Print this help.
 
 Examples:
@@ -74,9 +75,9 @@ Examples:
 ```bash
 > scdn start
 
-> scdn start -n my.cdn.com -p 3001 -f /packages -u https://uplink.cdn.com
+> scdn start -s -n my.cdn.com -p 3001 -f /packages -u https://uplink.cdn.com
 
-> scdn start --host my.cdn.com --port 3001 --packagesFolder /packages --uplink https://uplink.cdn.com
+> scdn start --secure --host my.cdn.com --port 3001 --packagesFolder /packages --uplink https://uplink.cdn.com
 ```
 
 > scdn publish
@@ -84,7 +85,7 @@ Examples:
 Publish a package to the server. The dist folder, package.json and README.md files are pushed to the server and stored. If you are not in the root of the package, or the dist folder is different, or the server is in a different machine, you can configure the options.
 
 - -p, --port: Port number where the server is listening to. [default: 3000]
-- -s, --host: host name or ip where the server is hosted. [default: localhost]
+- -n, --host: host name or ip where the server is hosted. [default: localhost]
 - -f, --folder: path to the folder where the the content to publish is placed. [default: ./dist]
 - -r, --readme: Path to the README.md to include [default: ./REAME.md]
 - -i, --package: Path to re package.json to include. [default: ./package.json]
@@ -96,7 +97,7 @@ Examples:
 ```bash
 > scdn publish
 
-> scdn -s 192.168.0.1 -p 3001 -f /packages/todo/bundle -r /packages/todo/README.md -i /pacakges/todo/package.json
+> scdn -n 192.168.0.1 -p 3001 -f /packages/todo/bundle -r /packages/todo/README.md -i /pacakges/todo/package.json
 
 > scdn publish -w
 ```
