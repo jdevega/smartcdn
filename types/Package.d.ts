@@ -12,4 +12,7 @@ export type Package = {
   keywords: string[];
   homepage?: string;
   uplink?: string;
+  main?: string;
+  exports?: object;
+  readme?: string;
 };
