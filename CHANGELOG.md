@@ -1,5 +1,11 @@
 # scdn
 
+## 0.4.0
+
+### Minor Changes
+
+- [#10](https://github.com/jdevega/smartcdn/pull/10) [`6262d8c`](https://github.com/jdevega/smartcdn/commit/6262d8cb5abda6191c07a42614541938ba7147a0) Thanks [@jdevega](https://github.com/jdevega)! - feat: add view CLI command
+
 ## 0.3.0
 
 ### Minor Changes
