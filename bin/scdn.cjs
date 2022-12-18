@@ -11,6 +11,9 @@ const fetch = require("node-fetch");
 const { spawn } = require("node:child_process");
 const tar = require("tar");
 const FormData = require("form-data");
+const chalk = require("chalk");
+const relativeDate = require("tiny-relative-date");
+const columns = require("cli-columns");
 
 const ONE_CDN_FOLDER = ".scdn";
 
@@ -54,9 +57,11 @@ const ONE_CDN_FOLDER = ".scdn";
   }
 
   /** @type {import("../types/Options").CommandLineOptions} */
+  // @ts-ignore
   const { host, port, sourceFolder, readmePath, packagePath, config, secure } =
     parseOptions();
 
+  // @ts-ignore
   const argv = yargs(hideBin(process.argv))
     .usage("$0 <command> [options]")
     .command(
@@ -137,6 +142,116 @@ const ONE_CDN_FOLDER = ".scdn";
       },
       publishPackage
     )
+    .command({
+      command: "view <package>",
+      aliases: ["info"],
+      describe: "View detailed info about a package",
+      handler: async (argv) => {
+        try {
+          const pkg = argv.package;
+          if (!pkg) throw Error("You forgot the package name?");
+          // @ts-ignore
+          const response = await fetch(
+            `http://${host}:${port}/api/packages/${pkg}`
+          );
+          if (!response.ok) {
+            throw Error(`Package ${pkg} not found.`);
+          }
+          const packageInfo = await response.json();
+
+          const {
+            package: {
+              name,
+              version,
+              keywords,
+              entryPoints = [],
+              created,
+              dependencies = [],
+              description,
+              uplink,
+              author,
+            },
+            versions,
+          } = packageInfo;
+          // @ts-ignore
+
+          const deps = Object.keys(dependencies || {}).map((dep) => {
+            return `${chalk.yellow(dep)}: ${dependencies[dep]}`;
+          });
+
+          console.log(
+            chalk.underline.bold(
+              `${chalk.green(name)}@${chalk.green(version)}`
+            ) +
+              " | " +
+              (uplink ? "From " + chalk.red(uplink) : "Published locally") +
+              " | " +
+              "deps: " +
+              chalk.green((deps || []).length) +
+              " | " +
+              "versions: " +
+              chalk.yellow(versions.length)
+          );
+
+          if (description) {
+            console.log(description);
+          }
+
+          if (keywords.length) {
+            console.log("");
+            console.log("keywords:", chalk.yellow(keywords.join(", ")));
+          }
+
+          const maxDeps = 24;
+          if (deps.length) {
+            console.log("");
+            console.log("dependencies:");
+            console.log(columns(deps.slice(0, maxDeps), { padding: 1 }));
+            if (deps.length > maxDeps) {
+              console.log(`(...and ${deps.length - maxDeps} more.)`);
+            }
+          }
+
+          if (entryPoints.length) {
+            console.log("");
+            console.log("entry points:");
+            console.log(
+              columns(
+                entryPoints.map((entryPoint) => chalk.blueBright(entryPoint)),
+                { padding: 1 }
+              )
+            );
+          }
+
+          const maxVersions = 6;
+          if (versions.length) {
+            console.log("\nversions:");
+            console.log(
+              columns(
+                versions
+                  .slice(0, maxVersions)
+                  .map((version) => chalk.green(version)),
+                {
+                  padding: 1,
+                }
+              )
+            );
+            if (versions.length > maxVersions) {
+              console.log(`(...and ${versions.length - maxVersions} more.)`);
+            }
+          }
+
+          console.log("");
+          console.log(
+            "Published",
+            chalk.yellow(relativeDate(created)),
+            author ? "by " + chalk.yellow(author) : ""
+          );
+        } catch (error) {
+          console.log(chalk.red(error.message));
+        }
+      },
+    })
     .help("h").argv;
 
   function start(args) {
@@ -230,6 +345,7 @@ const ONE_CDN_FOLDER = ".scdn";
       const watchedPath = path.join(process.cwd(), sourceFolder);
       const publishDebounced = debounce(publish, 1000);
       try {
+        // @ts-ignore
         fs.watch(watchedPath, {}, (event, filename) => {
           if (packagePath.includes(filename) || readmePath.includes(filename))
             return;

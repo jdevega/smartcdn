@@ -57,9 +57,9 @@ export default config;
 
 ## CLI
 
-The package includes the `scdn` command.
+The package includes the `scdn` CLI command.
 
-> scdn start
+### scdn start
 
 Starts the server with the default configuration. This command has these options:
 
@@ -80,7 +80,7 @@ Examples:
 > scdn start --secure --host my.cdn.com --port 3001 --packagesFolder /packages --uplink https://uplink.cdn.com
 ```
 
-> scdn publish
+### scdn publish
 
 Publish a package to the server. The dist folder, package.json and README.md files are pushed to the server and stored. If you are not in the root of the package, or the dist folder is different, or the server is in a different machine, you can configure the options.
 
@@ -100,6 +100,18 @@ Examples:
 > scdn -n 192.168.0.1 -p 3001 -f /packages/todo/bundle -r /packages/todo/README.md -i /pacakges/todo/package.json
 
 > scdn publish -w
+```
+
+### scdn view <package>
+
+> Alias: `info`
+
+Retrieve relevant information from any package published in the CDN
+
+Example:
+
+```bash
+> scdn view my-package
 ```
 
 ## SemVer Routes
