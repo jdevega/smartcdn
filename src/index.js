@@ -13,10 +13,11 @@ dotenv.config();
 
 (async () => {
   // Load variables from config file into process.env
-  console.log(process.env);
   try {
-    const configFilePath =
+    let configFilePath =
       process.env.config || path.join(process.cwd(), "scdn.config.js");
+    if (!configFilePath.startsWith("/"))
+      configFilePath = path.join(process.cwd(), configFilePath);
     const config = await import(configFilePath);
 
     console.log("## Using config file", configFilePath);
@@ -89,26 +90,48 @@ dotenv.config();
   // API Redirections endpoint
   server.route("/api/redirections", server.middlewares.redirections);
 
-  // API Last published packages
+  // API published packages
   server.route(
     "/api/packages",
-    async () => await application.getLastPublishedPackages(10)
+    async () => await application.getLastPublishedPackages(100)
   );
 
-  server.route("/api/packages/:name", async ({ params: { name } }) => {
-    try {
-      const pkg = await application.getPackage(name);
-      const versions = await application.versions(name);
-      return { package: pkg, versions };
-    } catch (error) {
-      return { message: error.message, status: 404 };
-    }
-  });
+  // API Last published packages
   server.route(
-    "/api/packages/:name/:version",
-    async ({ params: { name, version } }) => {
+    "/api/packages/last/:count",
+    async ({ params: { count = 12 } }) =>
+      await application.getLastPublishedPackages(count)
+  );
+
+  // API search for published packages
+  server.route(
+    "/api/packages/search/:query",
+    async ({ params: { query } }) =>
+      await application.findPublishedPackages(query)
+  );
+
+  server.route(
+    ["/api/packages/@:scope/:name", "/api/packages/:name"],
+    async ({ params: { scope, name } }) => {
       try {
-        const pkg = await application.getPackageVersion(name, version);
+        const packageName = new PackageName({ scope, name });
+        const pkg = await application.getPackage(packageName.name);
+        const versions = await application.versions(name);
+        return { package: pkg, versions };
+      } catch (error) {
+        return { message: error.message, status: 404 };
+      }
+    }
+  );
+  server.route(
+    ["/api/packages/@:scope/:name/:version", "/api/packages/:name/:version"],
+    async ({ params: { scope, name, version } }) => {
+      try {
+        const packageName = new PackageName({ scope, name });
+        const pkg = await application.getPackageVersion(
+          packageName.name,
+          version
+        );
         const versions = await application.versions(name);
         return { package: pkg, versions };
       } catch (error) {

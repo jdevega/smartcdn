@@ -27,6 +27,14 @@ export class ExpressServer {
 
     this._app = express();
     this._app.use(cors());
+
+    this.route(["/", "/search/*", "/view/*"], (req, res) => {
+      const { pathname: root } = new URL(
+        "../../ui/index.html",
+        import.meta.url
+      );
+      res.sendFile(root);
+    });
   }
 
   get uplink() {
@@ -44,14 +52,6 @@ export class ExpressServer {
   start(host, port) {
     this._host = host;
     this._port = port;
-
-    this._app.get("*", (req, res) => {
-      const { pathname: root } = new URL(
-        "../../ui/index.html",
-        import.meta.url
-      );
-      res.sendFile(root);
-    });
 
     this._app.listen(port, () =>
       console.log(`SCDN Server listening at http://${host}:${port}`)
@@ -79,6 +79,7 @@ export class ExpressServer {
       method(path, ...fns, async (req, res) => {
         const response = await _resultFn(req, {
           redirect: res.redirect.bind(res),
+          sendFile: res.sendFile.bind(res),
         });
         if (typeof response === "object") {
           const { status = 200, ...data } = response;

@@ -13,7 +13,10 @@ export class Package {
     this.license = options.license;
     this.uplink = options.uplink;
     this.author = options.author;
-    this.keywords = options.keywords;
+    this.main = options.main;
+    this.exports = options.exports || {};
+    this.keywords = options.keywords || [];
+    this.readme = options.readme;
 
     this.repository = options.repository?.url || options.homepage;
 

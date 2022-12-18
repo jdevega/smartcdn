@@ -23,7 +23,7 @@ export class MemoryDatabase {
   }
 
   set(key, value) {
-    this._data[key] = value;
+    this._data[key] = { created: Date.now(), ...value, updated: Date.now() };
   }
 
   delete(key) {

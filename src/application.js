@@ -14,10 +14,36 @@ export function createApplication({ database, server, uplink }) {
       database.initialize(packagesToData(pkgs));
       server.start(host, port);
     },
-    async getLastPublishedPackages(limit = 10) {
+    async getLastPublishedPackages(limit = 12) {
       const values = await database.values();
 
-      return values.sort(sortByCreated).slice(0, limit);
+      return {
+        total: values.length,
+        packages: values
+          .sort(sortByCreated)
+          .reduce(groupByName, [])
+          .slice(0, limit),
+      };
+    },
+    async findPublishedPackages(query) {
+      const keys = await database.keys();
+      const matchedKeys = keys.reduce((result, key) => {
+        if (key.includes(query)) result.push(key);
+        return result;
+      }, []);
+
+      let packages = [];
+      try {
+        packages = await Promise.all(
+          matchedKeys.map(database.get.bind(database))
+        );
+
+        packages = packages.sort(sortByCreated).reduce(groupByName, []);
+      } catch (error) {
+        packages = [];
+      }
+
+      return { packages };
     },
     async versions(name) {
       const keys = await database.keys();
@@ -53,10 +79,14 @@ export function createApplication({ database, server, uplink }) {
     },
     async savePackage(info) {
       const key = databaseKey(info);
-      if (server.secure && (await database.exist(key))) {
+      const exists = await database.exist(key);
+      if (server.secure && exists) {
         throw Error(
           "## [Error]: Packages cannot be overwritten in secure mode."
         );
+      }
+      if (!exists) {
+        info.created = Date.now();
       }
       database.set(databaseKey(info), info);
     },
@@ -120,7 +150,22 @@ export function createApplication({ database, server, uplink }) {
 function readFolderPackages(folder) {
   const pkgJsonFiles = fg.sync(`${folder}/**/package.json`);
 
-  return pkgJsonFiles.map(parseJsonFile);
+  return pkgJsonFiles.map((packageJsonFilePath) => {
+    const packageJsonContent = parseJsonFile(packageJsonFilePath);
+
+    let readme;
+    try {
+      readme = readReadmeFile(path.dirname(packageJsonFilePath));
+    } catch (error) {
+      return packageJsonContent;
+    }
+
+    return { ...packageJsonContent, readme };
+  });
+}
+
+function readReadmeFile(filePath) {
+  return fs.readFileSync(path.join(filePath, "README.md")).toString();
 }
 
 function parseJsonFile(path) {
@@ -148,4 +193,19 @@ function extractDatabaseKeyData(key) {
 
 function sortByCreated(a, b) {
   return a.created < b.created ? 1 : -1;
+}
+
+function groupByName(result, item) {
+  function hasItemWithName(name) {
+    return result.find((i) => i.name === name);
+  }
+
+  const currentItem = hasItemWithName(item.name);
+  if (!currentItem) {
+    item.versions = [item.version];
+    result.push(item);
+  } else {
+    currentItem.versions.push(item.version);
+  }
+  return result;
 }
